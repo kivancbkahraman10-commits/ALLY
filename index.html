@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALLY - Kişisel Yapay Zeka Asistanı</title>
+    <style>
+        body {
+            background-color: #050811;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Ana Ekran (Sesli Asistan Modu) */
+        .voice-mode-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Kamera Arka Planı (İsteğe bağlı aktif olur) */
+        #cameraStream {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            opacity: 0.3;
+            display: none;
+        }
+
+        /* Holografik Çekirdek (Görseldeki Gibi) */
+        .ai-core {
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,240,255,0.4) 0%, rgba(5,8,17,0.9) 70%);
+            border: 2px solid #00f0ff;
+            box-shadow: 0 0 30px #00f0ff, inset 0 0 30px #00f0ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: pulseCore 3s infinite alternate;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ai-core::before {
+            content: '';
+            position: absolute;
+            width: 270px;
+            height: 270px;
+            border: 2px dashed rgba(0, 240, 255, 0.5);
+            border-radius: 50%;
+            animation: rotateClockwise 12s linear infinite;
+        }
+
+        .ai-core::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 1px dotted rgba(168, 85, 247, 0.7);
+            border-radius: 50%;
+            animation: rotateCounter 15s linear infinite;
+        }
+
+        @keyframes pulseCore {
+            0% { transform: scale(0.95); box-shadow: 0 0 20px #00f0ff, inset 0 0 20px #00f0ff; }
+            100% { transform: scale(1.08); box-shadow: 0 0 50px #a855f7, inset 0 0 40px #a855f7; }
+        }
+
+        @keyframes rotateClockwise {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes rotateCounter {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
+
+        .core-text {
+            color: #00f0ff;
+            font-weight: bold;
+            letter-spacing: 4px;
+            font-size: 1.4rem;
+            z-index: 2;
+            text-shadow: 0 0 15px #00f0ff;
+        }
+
+        .status-text {
+            margin-top: 30px;
+            font-size: 1rem;
+            color: #10b981;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Kontrol Butonları (Alt Kısım) */
+        .controls {
+            position: absolute;
+            bottom: 40px;
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .ctrl-btn {
+            background: rgba(13, 19, 34, 0.8);
+            border: 1px solid #00f0ff;
+            color: #00f0ff;
+            padding: 12px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+            transition: 0.2s;
+        }
+
+        .ctrl-btn:hover {
+            background: #00f0ff;
+            color: #050811;
+            box-shadow: 0 0 20px #00f0ff;
+        }
+
+        .ctrl-btn.active {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+        }
+
+        /* Sohbet Paneli (Gizli / Açılır Modal) */
+        .chat-overlay {
+            position: absolute;
+            right: 30px;
+            bottom: 100px;
+            width: 350px;
+            height: 450px;
+            background: rgba(19, 27, 46, 0.95);
+            border: 1px solid #00f0ff;
+            border-radius: 16px;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.3);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        .chat-header {
+            background: #0d1322;
+            padding: 12px 15px;
+            border-bottom: 1px solid #00f0ff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #00f0ff;
+            font-weight: bold;
+        }
+
+        .close-chat {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .msg {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            max-width: 80%;
+            line-height: 1.3;
+        }
+        .ally-msg { background: #1e293b; border-left: 2px solid #00f0ff; align-self: flex-start; }
+        .user-msg { background: #0284c7; color: white; align-self: flex-end; }
+
+        .chat-input-area {
+            display: flex;
+            padding: 10px;
+            background: #0d1322;
+            border-top: 1px solid #1e293b;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            background: #1e293b;
+            border: none;
+            padding: 8px;
+            color: white;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .chat-input-area button {
+            background: #00f0ff;
+            border: none;
+            padding: 0 12px;
+            margin-left: 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="voice-mode-container">
+    <!-- Kamera Akışı -->
+    <video id="cameraStream" autoplay playsinline></video>
+
+    <!-- Holografik Çekirdek -->
+    <div class="ai-core" id="aiCore" onclick="toggleListening()">
+        <div class="core-text">ALLY</div>
+    </div>
+    <div class="status-text" id="statusText">Dinliyor... Konuşmaya Başlayın</div>
+
+    <!-- Alt Kontrol Paneli -->
+    <div class="controls">
+        <button class="ctrl-btn" id="micBtn" onclick="toggleMic()">🎤 Mikrofon: Açık</button>
+        <button class="ctrl-btn" id="camBtn" onclick="toggleCamera()">📷 Kamera: Kapalı</button>
+        <button class="ctrl-btn" onclick="toggleChatPanel()">💬 Chat Paneli</button>
+    </div>
+</div>
+
+<!-- Yazılı Sohbet Paneli -->
+<div class="chat-overlay" id="chatOverlay">
+    <div class="chat-header">
+        <span>ALLY // CHAT MODU</span>
+        <button class="close-chat" onclick="toggleChatPanel()">✖</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="msg ally-msg">Sistemler aktif. Yazışarak buradan devam edebiliriz patron!</div>
+    </div>
+    <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="Ally'ye mesaj yaz..." onkeypress="if(event.key==='Enter') sendChatText()">
+        <button onclick="sendChatText()">Gönder</button>
+    </div>
+</div>
+
+<script>
+    let isMicActive = true;
+    let isCameraActive = false;
+    let videoStream = null;
+
+    // Sayfa açıldığında sesli karşamlama simülasyonu (Tarayıcı ses sentezi)
+    window.onload = () => {
+        speak("Sistemler çevrimiçi. Ben Ally. Dinliyorum patron.");
+    };
+
+    function speak(text) {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'tr-TR';
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    // Mikrofon Açma/Kapama
+    function toggleMic() {
+        isMicActive = !isMicActive;
+        const btn = document.getElementById("micBtn");
+        const status = document.getElementById("statusText");
+        
+        if (isMicActive) {
+            btn.textContent = "🎤 Mikrofon: Açık";
+            btn.classList.remove("active");
+            status.textContent = "Dinliyor... Konuşmaya Başlayın";
+        } else {
+            btn.textContent = "🎤 Mikrofon: Kapalı";
+            btn.classList.add("active");
+            status.textContent = "Mikrofon Sessize Alındı";
+        }
+    }
+
+    // Kamera Açma/Kapama
+    async function toggleCamera() {
+        const videoElement = document.getElementById("cameraStream");
+        const btn = document.getElementById("camBtn");
+
+        if (!isCameraActive) {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                videoElement.srcObject = videoStream;
+                videoElement.style.display = "block";
+                isCameraActive = true;
+                btn.textContent = "📷 Kamera: Açık";
+                btn.classList.add("active");
+            } catch (err) {
+                alert("Kamera izni alınamadı veya kamera bulunamadı!");
+            }
+        } else {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
+            videoElement.style.display = "none";
+            isCameraActive = false;
+            btn.textContent = "📷 Kamera: Kapalı";
+            btn.classList.remove("active");
+        }
+    }
+
+    // Çekirdeğe tıklandığında konuşma efekti ve simülasyon
+    function toggleListening() {
+        const core = document.getElementById("aiCore");
+        const status = document.getElementById("statusText");
+
+        status.textContent = "Ally Konuşuyor...";
+        speak("Emredersiniz patron, sistemler kontrol altında.");
+        
+        setTimeout(() => {
+            status.textContent = "Dinliyor...";
+        }, 3000);
+    }
+
+    // Chat Panelini Aç/Kapat
+    function toggleChatPanel() {
+        const panel = document.getElementById("chatOverlay");
+        panel.style.display = panel.style.display === "flex" ? "none" : "flex";
+    }
+
+    // Yazılı Mesaj Gönderme
+    function sendChatText() {
+        const input = document.getElementById("chatInput");
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendChatMessage(text, "user-msg");
+        input.value = "";
+
+        setTimeout(() => {
+            let reply = "Analiz edildi! Bunu hemen çözüyorum patron.";
+            if(text.toLowerCase().includes("espri")) {
+                reply = "Yazılımcılar neden doğayı sever? Çünkü çok fazla 'bug' içerir de ondan!";
+            }
+            appendChatMessage(reply, "ally-msg");
+            speak(reply);
+        }, 600);
+    }
+
+    function appendChatMessage(text, className) {
+        const container = document.getElementById("chatMessages");
+        const div = document.createElement("div");
+        div.className = `msg ${className}`;
+        div.textContent = text;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
