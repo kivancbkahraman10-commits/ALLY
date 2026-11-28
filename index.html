@@ -1,485 +1,349 @@
+```html
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" class="dark h-full">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ALLY AI — Çoklu Yapay Zeka Asistanı</title>
-  <style>
-    :root {
-      --bg: #050811;
-      --panel: #0c1222;
-      --neon: #00f0ff;
-      --neon-soft: rgba(0, 240, 255, 0.25);
-      --text: #e6f7ff;
-      --muted: #7f9bb3;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-    body {
-      background: radial-gradient(circle at center, #0a1428 0%, var(--bg) 75%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 16px;
-    }
-    .orb-wrapper {
-      margin: 14px 0;
-      position: relative;
-      width: 150px;
-      height: 150px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .orb {
-      width: 130px;
-      height: 130px;
-      border-radius: 50%;
-      border: 3px solid var(--neon);
-      box-shadow: 0 0 25px var(--neon), inset 0 0 25px var(--neon-soft);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      letter-spacing: 4px;
-      color: var(--neon);
-      transition: transform 0.3s, box-shadow 0.3s;
-    }
-    .orb.listening {
-      transform: scale(1.1);
-      box-shadow: 0 0 45px #ff2a85, inset 0 0 30px rgba(255, 42, 133, 0.4);
-      border-color: #ff2a85;
-      color: #ff2a85;
-    }
-    .orb.speaking { animation: pulse 1s infinite alternate; }
-    @keyframes pulse {
-      from { transform: scale(1); box-shadow: 0 0 25px var(--neon); }
-      to { transform: scale(1.08); box-shadow: 0 0 50px var(--neon); }
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ALLY - Yapay Zeka Asistanı & Site Üreticisi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        ally: {
+                            obsidian: '#07090e',
+                            surface: '#0d121d',
+                            card: '#111827',
+                            cyan: '#00f0ff',
+                            blue: '#3b82f6',
+                            emerald: '#10b981',
+                            purple: '#8b5cf6'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2.2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { boxShadow: '0 0 16px rgba(0, 240, 255, 0.35), 0 0 32px rgba(59, 130, 246, 0.2)' },
+                            '100%': { boxShadow: '0 0 28px rgba(0, 240, 255, 0.75), 0 0 50px rgba(59, 130, 246, 0.45)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --ui-scale: 1;
+            --btn-padding: 0.65rem 1rem;
+            --icon-btn-size: 2.75rem;
+            --text-base: 0.95rem;
+            --container-max: 1040px;
+            --bubble-padding: 1rem 1.15rem;
+        }
 
-    .modes {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 12px;
-      width: 100%;
-      max-width: 600px;
-    }
-    .mode-btn {
-      background: var(--panel);
-      color: var(--muted);
-      border: 1px solid #1d2d4a;
-      padding: 8px 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .mode-btn.active {
-      color: var(--neon);
-      border-color: var(--neon);
-      box-shadow: 0 0 12px var(--neon-soft);
-    }
+        body {
+            background-color: #07090e;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(circle at 12% 10%, rgba(0, 240, 255, 0.08) 0%, transparent 42%),
+                radial-gradient(circle at 88% 90%, rgba(59, 130, 246, 0.09) 0%, transparent 45%);
+        }
 
-    .output-box {
-      width: 100%;
-      max-width: 600px;
-      background: rgba(12, 18, 34, 0.9);
-      border: 1px solid #1e3252;
-      border-radius: 16px;
-      padding: 16px;
-      min-height: 180px;
-      max-height: 45vh;
-      overflow-y: auto;
-      line-height: 1.55;
-      font-size: 15px;
-      margin-bottom: 12px;
-      white-space: pre-wrap;
-    }
-    .output-box img {
-      width: 100%;
-      border-radius: 12px;
-      margin-top: 8px;
-      border: 1px solid var(--neon);
-    }
-    .preview-frame {
-      width: 100%;
-      height: 260px;
-      border: 1px solid var(--neon);
-      border-radius: 10px;
-      background: #fff;
-      margin-top: 10px;
-    }
+        .glass {
+            background: rgba(13, 18, 29, 0.75);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(0, 240, 255, 0.12);
+        }
 
-    .input-row {
-      display: flex;
-      gap: 8px;
-      width: 100%;
-      max-width: 600px;
-      margin-bottom: 12px;
-    }
-    input[type="text"], input[type="password"] {
-      flex: 1;
-      background: var(--panel);
-      border: 1px solid #23385c;
-      color: var(--text);
-      padding: 11px;
-      border-radius: 10px;
-      outline: none;
-      font-size: 14px;
-    }
-    input:focus { border-color: var(--neon); }
-    .send-btn {
-      background: var(--neon);
-      color: #02060f;
-      border: none;
-      padding: 0 18px;
-      border-radius: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
+        .glass-strong {
+            background: rgba(10, 14, 24, 0.94);
+            backdrop-filter: blur(26px);
+            -webkit-backdrop-filter: blur(26px);
+            border: 1px solid rgba(0, 240, 255, 0.28);
+        }
 
-    .dock {
-      display: flex;
-      gap: 10px;
-      width: 100%;
-      max-width: 600px;
-      justify-content: space-between;
-    }
-    .dock-btn {
-      flex: 1;
-      background: var(--panel);
-      color: var(--text);
-      border: 1px solid #23385c;
-      padding: 12px 8px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-    .dock-btn.active { border-color: var(--neon); color: var(--neon); }
+        /* Cihaz Ölçeklendirme Sınıfları */
+        body.device-computer {
+            --btn-padding: 0.65rem 1.05rem;
+            --icon-btn-size: 2.8rem;
+            --text-base: 0.95rem;
+            --container-max: 1060px;
+            --bubble-padding: 0.95rem 1.15rem;
+        }
+        body.device-tablet {
+            --btn-padding: 0.85rem 1.3rem;
+            --icon-btn-size: 3.4rem;
+            --text-base: 1.06rem;
+            --container-max: 880px;
+            --bubble-padding: 1.1rem 1.3rem;
+        }
+        body.device-phone {
+            --btn-padding: 0.9rem 1.15rem;
+            --icon-btn-size: 3.55rem;
+            --text-base: 1.06rem;
+            --container-max: 100%;
+            --bubble-padding: 1.05rem 1.2rem;
+        }
 
-    /* 4 lines icon style */
-    .four-lines {
-      display: inline-flex;
-      flex-direction: column;
-      justify-content: space-between;
-      width: 16px;
-      height: 12px;
-    }
-    .four-lines span {
-      display: block;
-      height: 2px;
-      width: 100%;
-      background: currentColor;
-      border-radius: 2px;
-    }
+        .adaptive-btn {
+            padding: var(--btn-padding);
+            font-size: var(--text-base);
+        }
+        .adaptive-icon-btn {
+            width: var(--icon-btn-size);
+            height: var(--icon-btn-size);
+        }
+        .adaptive-text {
+            font-size: var(--text-base);
+        }
+        .adaptive-container {
+            max-width: var(--container-max);
+        }
+        .adaptive-bubble {
+            padding: var(--bubble-padding);
+            font-size: var(--text-base);
+        }
 
-    /* Settings Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 99;
-    }
-    .modal.open { display: flex; }
-    .modal-card {
-      background: var(--panel);
-      border: 1px solid var(--neon);
-      border-radius: 16px;
-      padding: 20px;
-      width: 100%;
-      max-width: 460px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .modal-card h3 { color: var(--neon); font-size: 18px; }
-    .key-group label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px; }
-    .key-row { display: flex; gap: 6px; align-items: center; }
-    .get-key-btn {
-      background: rgba(0, 240, 255, 0.12);
-      color: var(--neon);
-      border: 1px solid var(--neon);
-      padding: 10px 12px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 600;
-      text-decoration: none;
-      white-space: nowrap;
-      transition: 0.2s;
-    }
-    .get-key-btn:hover { background: var(--neon); color: #02060f; }
-  </style>
+        /* Özel Kaydırma Çubuğu */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.2); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 240, 255, 0.45); }
+
+        /* Ses Dalgası Animasyonu */
+        .wave-bar {
+            width: 5px;
+            border-radius: 9999px;
+            background: linear-gradient(to top, #00f0ff, #3b82f6, #8b5cf6);
+            animation: waveAnim 0.95s ease-in-out infinite;
+        }
+        .wave-bar:nth-child(2) { animation-delay: 0.14s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.28s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.42s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.56s; }
+        .wave-bar:nth-child(6) { animation-delay: 0.70s; }
+
+        @keyframes waveAnim {
+            0%, 100% { height: 12px; }
+            50% { height: 48px; }
+        }
+
+        /* Kod Bloğu Stili */
+        pre {
+            background: #04060a;
+            border: 1px solid rgba(0, 240, 255, 0.22);
+            border-radius: 0.85rem;
+            padding: 0.9rem;
+            overflow-x: auto;
+            margin: 0.6rem 0;
+            font-size: 0.82rem;
+            max-height: 280px;
+        }
+    </style>
 </head>
-<body>
+<body class="h-full flex flex-col overflow-hidden select-none sm:select-auto device-computer">
 
-  <div class="orb-wrapper">
-    <div id="orb" class="orb">ALLY</div>
-  </div>
+    <!-- 1. GİRİŞ EKRANI: CİHAZ SEÇİMİ -->
+    <div id="deviceModal" class="fixed inset-0 z-50 flex items-center justify-center bg-[#07090e]/95 backdrop-blur-xl p-4 hidden">
+        <div class="glass-strong w-full max-w-xl rounded-3xl p-6 sm:p-8 shadow-2xl text-center">
+            <div class="w-20 h-20 mx-auto mb-5 rounded-full bg-gradient-to-tr from-[#00f0ff] via-blue-500 to-purple-600 p-0.5 animate-glow">
+                <div class="w-full h-full bg-[#07090e] rounded-full flex items-center justify-center overflow-hidden">
+                    <img id="onboardingAvatar" src="" alt="Ally" class="w-full h-full object-cover hidden">
+                    <span id="onboardingTextLogo" class="font-extrabold text-xl tracking-widest bg-gradient-to-r from-[#00f0ff] to-blue-400 bg-clip-text text-transparent">ALLY</span>
+                </div>
+            </div>
+            
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white mb-2">Hangi cihazı kullanıyorsun?</h1>
+            <p class="text-slate-400 text-sm sm:text-base mb-7">Tuş boyutlarını, yazı ölçeğini ve ekran düzenini cihazına göre otomatik uyarlayalım.</p>
 
-  <div class="modes">
-    <button class="mode-btn active" data-mode="chat">💬 Sohbet (Groq)</button>
-    <button class="mode-btn" data-mode="code">💻 Site Kodla (OpenRouter)</button>
-    <button class="mode-btn" data-mode="voice">🎙️ Sesli Zeka (Gemini)</button>
-    <button class="mode-btn" data-mode="image">🎨 Görsel Çiz</button>
-  </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Bilgisayar -->
+                <button onclick="selectDevice('computer')" class="group glass hover:border-[#00f0ff] rounded-2xl p-5 flex flex-col items-center justify-center gap-3 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/20">
+                    <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 text-[#00f0ff] group-hover:bg-[#00f0ff] group-hover:text-slate-950 flex items-center justify-center text-2xl transition-colors">
+                        <i class="fa-solid fa-desktop"></i>
+                    </div>
+                    <div class="font-bold text-lg text-white">Bilgisayar</div>
+                    <div class="text-xs text-slate-400">Geniş ve dengeli düzen</div>
+                </button>
 
-  <div id="output" class="output-box">Merhaba! Sağ alttaki 4 çizgili menü tuşuna basıp ücretsiz API anahtarlarını alabilir ve yapıştırabilirsin. Görsel çizme ise doğrudan hazır!</div>
+                <!-- Tablet -->
+                <button onclick="selectDevice('tablet')" class="group glass hover:border-blue-400 rounded-2xl p-5 flex flex-col items-center justify-center gap-3 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/20">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white flex items-center justify-center text-2xl transition-colors">
+                        <i class="fa-solid fa-tablet-screen-button"></i>
+                    </div>
+                    <div class="font-bold text-lg text-white">Tablet</div>
+                    <div class="text-xs text-slate-400">Büyük dokunmatik tuşlar</div>
+                </button>
 
-  <div class="input-row">
-    <input id="promptInput" type="text" placeholder="Ally'ye bir şey sor veya site tarif et..." />
-    <button id="sendBtn" class="send-btn">Gönder</button>
-  </div>
-
-  <div class="dock">
-    <button id="micBtn" class="dock-btn">🎤 Mikrofon</button>
-    <button id="speakToggleBtn" class="dock-btn active">🔊 Sesli Yanıt: Açık</button>
-    <button id="panelBtn" class="dock-btn">
-      <div class="four-lines">
-        <span></span><span></span><span></span><span></span>
-      </div>
-      Paneli
-    </button>
-  </div>
-
-  <!-- API Settings Modal -->
-  <div id="settingsModal" class="modal">
-    <div class="modal-card">
-      <h3>⚙️ API Anahtarı Merkezi</h3>
-      <p style="font-size:12px; color:#9ab;">Yanlardaki "Anahtar Al" tuşlarına basarak ücretsiz kodunu oluştur ve kutuya yapıştır:</p>
-      
-      <div class="key-group">
-        <label>1. Groq API Key (Hızlı Sohbet — gsk_...)</label>
-        <div class="key-row">
-          <input id="groqKey" type="password" placeholder="gsk_..." />
-          <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="get-key-btn">Anahtar Al ↗</a>
+                <!-- Telefon -->
+                <button onclick="selectDevice('phone')" class="group glass hover:border-purple-400 rounded-2xl p-5 flex flex-col items-center justify-center gap-3 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-purple-500/20">
+                    <div class="w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-400 group-hover:bg-purple-500 group-hover:text-white flex items-center justify-center text-2xl transition-colors">
+                        <i class="fa-solid fa-mobile-screen"></i>
+                    </div>
+                    <div class="font-bold text-lg text-white">Telefon</div>
+                    <div class="text-xs text-slate-400">Tam ekran mobil uyum</div>
+                </button>
+            </div>
         </div>
-      </div>
-
-      <div class="key-group">
-        <label>2. OpenRouter API Key (Kod & Site — sk-or-v1-...)</label>
-        <div class="key-row">
-          <input id="orKey" type="password" placeholder="sk-or-v1-..." />
-          <a href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener" class="get-key-btn">Anahtar Al ↗</a>
-        </div>
-      </div>
-
-      <div class="key-group">
-        <label>3. Google Gemini API Key (Sesli Konuşma — AIza...)</label>
-        <div class="key-row">
-          <input id="geminiKey" type="password" placeholder="AIza..." />
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="get-key-btn">Anahtar Al ↗</a>
-        </div>
-      </div>
-
-      <div style="font-size:12px; color:#5ce1e6;">4. Görsel Üretici: Otomatik Aktif (Anahtar Gerekmez)</div>
-
-      <div style="display:flex; gap:8px; margin-top:4px;">
-        <button id="saveKeysBtn" class="send-btn" style="padding:11px; flex:1;">Kaydet</button>
-        <button id="closeModalBtn" class="dock-btn" style="flex:1;">Kapat</button>
-      </div>
     </div>
-  </div>
 
-  <script>
-    let currentMode = 'chat';
-    let voiceReplyEnabled = true;
+    <!-- 2. AYARLAR MODALI (GEMINI API, GITHUB TOKEN & ÖZEL LOGO) -->
+    <div id="settingsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 hidden">
+        <div class="glass-strong w-full max-w-lg rounded-3xl p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2.5">
+                    <i class="fa-solid fa-gear text-[#00f0ff]"></i> Ally Sistem Ayarları
+                </h2>
+                <button onclick="toggleSettingsModal(false)" class="w-9 h-9 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
 
-    const orb = document.getElementById('orb');
-    const output = document.getElementById('output');
-    const promptInput = document.getElementById('promptInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const micBtn = document.getElementById('micBtn');
-    const speakToggleBtn = document.getElementById('speakToggleBtn');
-    const panelBtn = document.getElementById('panelBtn');
-    const settingsModal = document.getElementById('settingsModal');
+            <!-- 1) Google Gemini API Anahtarı -->
+            <div class="mb-5 p-4 rounded-2xl bg-slate-900/75 border border-cyan-500/20">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-bold uppercase tracking-wider text-[#00f0ff]">1. Google Gemini API Anahtarı</label>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-xs text-emerald-400 hover:underline flex items-center gap-1">
+                        Anahtar Al <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+                <input type="password" id="geminiKeyInput" placeholder="AIzaSy..." class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 focus:border-[#00f0ff] focus:outline-none text-white text-sm">
+                <p class="text-[11px] text-slate-400 mt-1.5">Sohbet, sesli asistan, kodlama ve görsel üretimi için zorunludur. Tarayıcına kalıcı kaydedilir.</p>
+            </div>
 
-    document.getElementById('groqKey').value = localStorage.getItem('ally_groq') || '';
-    document.getElementById('orKey').value = localStorage.getItem('ally_or') || '';
-    document.getElementById('geminiKey').value = localStorage.getItem('ally_gemini') || '';
+            <!-- 2) GitHub Personal Access Token (Otomatik Site Yayınlama) -->
+            <div class="mb-5 p-4 rounded-2xl bg-slate-900/75 border border-blue-500/25">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-bold uppercase tracking-wider text-blue-400">2. GitHub Token (Otomatik Site Yayınlama)</label>
+                    <a href="https://github.com/settings/tokens/new?scopes=repo&description=Ally-AI-Publisher" target="_blank" rel="noopener noreferrer" class="text-xs text-blue-300 hover:underline flex items-center gap-1">
+                        Token Oluştur <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+                <input type="password" id="githubTokenInput" placeholder="ghp_... veya github_pat_..." class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 focus:border-blue-400 focus:outline-none text-white text-sm">
+                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                    İsteğe bağlıdır. <code class="text-blue-300 bg-slate-950 px-1 rounded">repo</code> yetkili token girersen Ally yaptığı siteleri otomatik GitHub hesabına yükler ve sana canlı paylaşım linki atar.
+                </p>
+            </div>
 
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentMode = btn.dataset.mode;
-      });
-    });
+            <!-- 3) Özel Ally Logosu / Resmi -->
+            <div class="mb-6 p-4 rounded-2xl bg-slate-900/75 border border-purple-500/20">
+                <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2.5">3. Kendi Ally Logonu / Resmini Seç</label>
+                <div class="flex items-center gap-3.5">
+                    <div class="w-14 h-14 rounded-full bg-slate-950 border border-[#00f0ff]/40 flex items-center justify-center overflow-hidden shrink-0">
+                        <img id="settingsAvatarPreview" src="" class="w-full h-full object-cover hidden">
+                        <span id="settingsAvatarFallback" class="text-xs font-extrabold text-[#00f0ff]">ALLY</span>
+                    </div>
+                    <div class="flex-1 flex flex-wrap gap-2">
+                        <label class="cursor-pointer px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition-colors">
+                            <i class="fa-solid fa-image mr-1.5 text-[#00f0ff]"></i> Resim Yükle
+                            <input type="file" accept="image/*" onchange="handleCustomAvatarUpload(event)" class="hidden">
+                        </label>
+                        <button onclick="resetCustomAvatar()" class="px-3.5 py-2.5 rounded-xl bg-slate-800/60 hover:bg-red-500/20 text-xs text-slate-400 hover:text-red-400 transition-colors">
+                            Varsayılana Dön
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-    panelBtn.onclick = () => settingsModal.classList.add('open');
-    document.getElementById('closeModalBtn').onclick = () => settingsModal.classList.remove('open');
-    document.getElementById('saveKeysBtn').onclick = () => {
-      localStorage.setItem('ally_groq', document.getElementById('groqKey').value.trim());
-      localStorage.setItem('ally_or', document.getElementById('orKey').value.trim());
-      localStorage.setItem('ally_gemini', document.getElementById('geminiKey').value.trim());
-      settingsModal.classList.remove('open');
-      output.textContent = '✅ API anahtarların cihazına kaydedildi! Artık tüm modları kullanabilirsin.';
-    };
+            <div class="flex justify-end gap-3">
+                <button onclick="toggleSettingsModal(false)" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-semibold text-slate-300">İptal</button>
+                <button onclick="saveSettings()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#00f0ff] to-blue-500 hover:opacity-95 text-slate-950 text-sm font-extrabold shadow-lg shadow-cyan-500/25">Ayarları Kaydet</button>
+            </div>
+        </div>
+    </div>
 
-    speakToggleBtn.onclick = () => {
-      voiceReplyEnabled = !voiceReplyEnabled;
-      speakToggleBtn.textContent = voiceReplyEnabled ? '🔊 Sesli Yanıt: Açık' : '🔇 Sesli Yanıt: Kapalı';
-      speakToggleBtn.classList.toggle('active', voiceReplyEnabled);
-      if (!voiceReplyEnabled) window.speechSynthesis.cancel();
-    };
+    <!-- 3. SESLİ KONUŞMA KATMANI (VOICE ASSISTANT OVERLAY) -->
+    <div id="voiceOverlay" class="fixed inset-0 z-40 bg-[#07090e]/96 backdrop-blur-2xl flex flex-col items-center justify-between p-6 hidden">
+        <div class="w-full max-w-xl flex items-center justify-between">
+            <span class="px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-[#00f0ff]/30 text-[#00f0ff] text-xs font-bold tracking-wider uppercase flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Canlı Sesli Asistan
+            </span>
+            <button onclick="toggleVoiceMode(false)" class="adaptive-icon-btn rounded-2xl bg-slate-800/90 hover:bg-red-500/20 text-slate-300 hover:text-red-400 flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
 
-    function speakText(text) {
-      if (!voiceReplyEnabled || !('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const clean = text.replace(/```[\s\S]*?```/g, 'Kod hazırlandı.').replace(/[#*`]/g, '');
-      const utter = new SpeechSynthesisUtterance(clean);
-      utter.lang = 'tr-TR';
-      utter.onstart = () => orb.classList.add('speaking');
-      utter.onend = () => orb.classList.remove('speaking');
-      window.speechSynthesis.speak(utter);
-    }
+        <!-- Ortadaki Neon Küre ve Ses Dalgaları -->
+        <div class="flex flex-col items-center text-center my-auto">
+            <div id="voiceOrb" class="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-tr from-[#00f0ff] via-blue-500 to-purple-600 p-1 shadow-2xl animate-glow flex items-center justify-center mb-8 relative">
+                <div class="w-full h-full bg-[#07090e] rounded-full flex items-center justify-center overflow-hidden">
+                    <img id="voiceOrbAvatar" src="" class="w-full h-full object-cover opacity-75 hidden">
+                    <div id="voiceWaveBars" class="flex items-center justify-center gap-1.5 h-14">
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                    </div>
+                </div>
+            </div>
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition = null;
-    if (SpeechRecognition) {
-      recognition = new SpeechRecognition();
-      recognition.lang = 'tr-TR';
-      recognition.interimResults = false;
+            <h2 id="voiceStateText" class="text-2xl sm:text-3xl font-extrabold text-white mb-3">Seni Dinliyorum...</h2>
+            <p id="voiceLiveTranscript" class="text-slate-300 text-base sm:text-lg max-w-md min-h-[3.5rem] px-4 italic">
+                Konuşmaya başlayabilirsin...
+            </p>
+        </div>
 
-      recognition.onstart = () => {
-        orb.classList.add('listening');
-        micBtn.textContent = '🎤 Dinliyor...';
-        micBtn.classList.add('active');
-      };
-      recognition.onend = () => {
-        orb.classList.remove('listening');
-        micBtn.textContent = '🎤 Mikrofon';
-        micBtn.classList.remove('active');
-      };
-      recognition.onresult = (e) => {
-        const transcript = e.results[0][0].transcript;
-        promptInput.value = transcript;
-        if (currentMode === 'chat') {
-          document.querySelector('[data-mode="voice"]').click();
-        }
-        handleSend();
-      };
-    }
+        <!-- Alt Kontroller -->
+        <div class="flex items-center gap-4">
+            <button onclick="manualRestartListening()" title="Tekrar Dinle" class="adaptive-icon-btn rounded-full bg-[#00f0ff] text-slate-950 flex items-center justify-center text-xl shadow-lg shadow-cyan-500/30">
+                <i class="fa-solid fa-microphone"></i>
+            </button>
+            <button onclick="toggleVoiceMode(false)" class="adaptive-btn rounded-full bg-red-500/20 border border-red-500/40 hover:bg-red-500 text-red-300 hover:text-white font-bold transition-all">
+                Sesli Konuşmayı Kapat
+            </button>
+        </div>
+    </div>
 
-    micBtn.onclick = () => {
-      if (!recognition) {
-        alert('Tarayıcın ses tanımayı desteklemiyor. Chrome kullanmanı öneririm.');
-        return;
-      }
-      try { recognition.start(); } catch (err) { recognition.stop(); }
-    };
+    <!-- ANA UYGULAMA DÜZENİ -->
+    <div class="flex-1 flex flex-col h-full w-full mx-auto adaptive-container px-2 sm:px-4 py-2 sm:py-3 overflow-hidden">
+        
+        <!-- ÜST BAR (HEADER) -->
+        <header class="glass rounded-2xl px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between mb-2 sm:mb-3 shrink-0">
+            <!-- Sol: Ally Logosu -->
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-[#00f0ff] via-blue-500 to-purple-500 p-0.5 shadow-lg shadow-cyan-500/20 shrink-0">
+                    <div class="w-full h-full bg-[#07090e] rounded-full flex items-center justify-center overflow-hidden">
+                        <img id="headerAvatarImg" src="" alt="ALLY" class="w-full h-full object-cover hidden">
+                        <span id="headerAvatarText" class="font-extrabold text-sm sm:text-base tracking-wider bg-gradient-to-r from-[#00f0ff] to-blue-400 bg-clip-text text-transparent">ALLY</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-extrabold text-lg sm:text-xl tracking-tight text-white">ALLY</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    </div>
+                    <p class="text-[11px] text-slate-400">Gemini Altyapısı</p>
+                </div>
+            </div>
 
-    async function handleSend() {
-      const prompt = promptInput.value.trim();
-      if (!prompt) return;
-      promptInput.value = '';
-      output.textContent = '⏳ Ally düşünüyor...';
+            <!-- Sağ: Sesli Konuşma, Cihaz Değiştir ve Ayarlar -->
+            <div class="flex items-center gap-2">
+                <!-- Sesli Konuşma Butonu -->
+                <button onclick="toggleVoiceMode(true)" class="adaptive-btn rounded-xl bg-gradient-to-r from-[#00f0ff]/15 to-blue-500/15 hover:from-[#00f0ff] hover:to-blue-500 border border-[#00f0ff]/40 text-[#00f0ff] hover:text-slate-950 font-bold flex items-center gap-2 transition-all shadow-sm">
+                    <i class="fa-solid fa-microphone-lines"></i>
+                    <span>Sesli Konuşma</span>
+                </button>
 
-      try {
-        if (currentMode === 'image') {
-          const encoded = encodeURIComponent(prompt);
-          const url = `https://image.pollinations.ai/prompt/${encoded}?width=768&height=768&nologo=true`;
-          output.innerHTML = `<div>🎨 Görsel oluşturuldu: <b>${prompt}</b></div><img src="${url}" alt="AI Görsel" />`;
-          speakText('Görselin hazır.');
-          return;
-        }
+                <!-- Cihaz Değiştir -->
+                <button onclick="openDeviceModal()" title="Cihaz Boyutunu Değiştir" class="adaptive-icon-btn rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors">
+                    <i id="currentDeviceIcon" class="fa-solid fa-desktop"></i>
+                </button>
 
-        if (currentMode === 'chat') {
-          const key = localStorage.getItem('ally_groq');
-          if (!key) {
-            settingsModal.classList.add('open');
-            throw new Error('Groq anahtarı gerekli. Açılan pencereden "Anahtar Al" tuşuna bas.');
-          }
-          const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: 'llama-3.3-70b-versatile',
-              messages: [
-                { role: 'system', content: 'Sen Ally adında zeki, samimi ve yardımcı bir Türkçe yapay zeka asistanısın.' },
-                { role: 'user', content: prompt }
-              ]
-            })
-          });
-          const data = await res.json();
-          if (data.error) throw new Error(data.error.message);
-          const reply = data.choices[0].message.content;
-          output.textContent = reply;
-          speakText(reply);
-          return;
-        }
-
-        if (currentMode === 'code') {
-          const key = localStorage.getItem('ally_or');
-          if (!key) {
-            settingsModal.classList.add('open');
-            throw new Error('OpenRouter anahtarı gerekli. Açılan pencereden "Anahtar Al" tuşuna bas.');
-          }
-          const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: 'openrouter/free',
-              messages: [
-                { role: 'system', content: 'Sen uzman bir web geliştiricisin. Kullanıcı bir site veya kod istediğinde eksiksiz, tek dosyalık çalışan HTML/CSS/JS kodu yaz. Kodu ```html ve ``` blokları içine koy.' },
-                { role: 'user', content: prompt }
-              ]
-            })
-          });
-          const data = await res.json();
-          if (data.error) throw new Error(data.error.message);
-          const reply = data.choices[0].message.content;
-          const htmlMatch = reply.match(/```html([\s\S]*?)```/i);
-          if (htmlMatch) {
-            const code = htmlMatch[1].trim();
-            output.innerHTML = `<div>💻 Site kodu oluşturuldu ve aşağıda canlı çalıştırıldı:</div><iframe class="preview-frame" id="liveFrame"></iframe><details style="margin-top:8px;"><summary style="cursor:pointer;color:#00f0ff;">Kodu Göster</summary><pre style="font-size:12px;overflow-x:auto;margin-top:6px;">${code.replace(/</g, '&lt;')}</pre></details>`;
-            document.getElementById('liveFrame').srcdoc = code;
-          } else {
-            output.textContent = reply;
-          }
-          speakText('Kodun ve canlı önizlemen hazır.');
-          return;
-        }
-
-        if (currentMode === 'voice') {
-          const key = localStorage.getItem('ally_gemini');
-          if (!key) {
-            settingsModal.classList.add('open');
-            throw new Error('Gemini anahtarı gerekli. Açılan pencereden "Anahtar Al" tuşuna bas.');
-          }
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: `Sen Ally adında sesli bir asistansın. Kısa, doğal ve akıcı Türkçe cevap ver. Soru: ${prompt}` }] }]
-            })
-          });
-          const data = await res.json();
-          if (data.error) throw new Error(data.error.message);
-          const reply = data.candidates[0].content.parts[0].text;
-          output.textContent = reply;
-          speakText(reply);
-          return;
-        }
-      } catch (err) {
-        output.textContent = '⚠️ ' + err.message;
-      }
-    }
-
-    sendBtn.onclick = handleSend;
-    promptInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSend(); });
-  </script>
-</body>
-</html>
+                <!-- Ayarlar (Dişli Çark)
